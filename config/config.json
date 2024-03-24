@@ -1,0 +1,12 @@
+{
+
+      "host": "db",
+      "port": 3306,
+      "database": "drive",
+      "username": "root",
+      "password": "123Ouafb@$",
+      "dialect": "mysql",
+      "privateKey": "NotSoPrivateKey"
+
+
+  }
