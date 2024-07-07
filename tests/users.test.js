@@ -1,18 +1,12 @@
-import * as request from 'supertest';
-import app from '../app'; // Assuming your Express app is in app.js
+const request = require('supertest');
+const express = require('express');
+const router = require('../routes/users');
+const app = express();
 
-describe('User Routes', () => {
-  let newUser;
+app.use(express.json());
+app.use(router);
 
-  beforeEach(() => {
-    newUser = {
-      firstname: 'John',
-      lastname: 'Doe',
-      email: 'john@example.com',
-      password: 'password',
-    };
-  });
-
+describe('Users Routes', () => {
   it('should get all users', async () => {
     const res = await request(app).get('/users');
     expect(res.status).toBe(200);
@@ -20,6 +14,13 @@ describe('User Routes', () => {
   });
 
   it('should create a new user', async () => {
+    const newUser = {
+      firstname: 'John',
+      lastname: 'Doe',
+      email: 'john.doe@example.com',
+      password: 'Password123'
+    };
+
     const res = await request(app)
       .post('/createUser')
       .send(newUser);
@@ -28,22 +29,28 @@ describe('User Routes', () => {
   });
 
   it('should login user with correct credentials', async () => {
-    const { email, password } = newUser;
+    const loginData = {
+      email: 'john.doe@example.com',
+      password: 'Password123'
+    };
+
     const res = await request(app)
       .post('/login')
-      .send({ email, password });
+      .send(loginData);
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('token');
   });
 
   it('should return an error for incorrect login credentials', async () => {
+    const loginData = {
+      email: 'john.doe@example.com',
+      password: 'wrongpassword'
+    };
+
     const res = await request(app)
       .post('/login')
-      .send({
-        email: 'test@example.com',
-        password: 'wrongpassword',
-      });
-    expect(res.status).toBe(403);
-    expect(res.text).toBe('mot de passe incorrect');
+      .send(loginData);
+    expect(res.status).toBe(403); 
+    expect(res.body).toBe('Mot de passe incorrect'); // Vérifier le texte de l'erreur
   });
 });

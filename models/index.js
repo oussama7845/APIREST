@@ -13,20 +13,25 @@ const sequelize = new Sequelize(config.database, config.username, config.passwor
 const db = {};
 
 fs.readdirSync(__dirname)
-  .filter((file) => file !== 'index.js')
-  .forEach((file) => {
+  .filter(file => file !== 'index.js' && file.slice(-3) === '.js')
+  .forEach(file => {
     const model = require(path.join(__dirname, file))(sequelize, DataTypes);
     db[model.name] = model;
   });
 
-Object.keys(db).forEach((modelName) => {
+Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
 
 db.sequelize = sequelize;
+db.Sequelize = Sequelize;
 
-
+sequelize.sync().then(() => {
+  console.log('Database tables created!');
+}).catch(err => {
+  console.error('Error syncing database:', err);
+});
 
 module.exports = db;

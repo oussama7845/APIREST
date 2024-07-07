@@ -1,39 +1,22 @@
-version: '3'
+version: '3.8'
 
 services:
-  # Service pour la base de données MySQL
-  db:
-    image: mysql:8
-    container_name: mysql_db
-    environment:
-      MYSQL_ROOT_PASSWORD: 123Ouafb@$
-      MYSQL_DATABASE: drive
-
-    networks:
-      - drive-network
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-
-  # Service pour l'application Node.js
-  app:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: node_app
-    depends_on:
-      - db
-    environment:
-      DB_HOST: db
-      DB_USER: root
-      DB_PASSWORD: 123Ouafb@$
-      DB_DATABASE: drive
     ports:
       - "3000:3000"
-
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=oussama$@
+      - DB_NAME=drive
+    depends_on:
+      - db
     networks:
-      - drive-network
+      - mynetwork
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
@@ -41,9 +24,15 @@ services:
       timeout: 5s
       retries: 3
 
-networks:
-  drive-network:
-    driver: bridge
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: oussama$@
+      MYSQL_DATABASE: drive
+    networks:
+      - mynetwork
 
-volumes:
-  db_data:
+networks:
+  mynetwork:
+    driver: bridge

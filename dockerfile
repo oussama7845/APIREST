@@ -1,26 +1,18 @@
-# Utilise une image officielle de Node.js avec la version souhaitée
+# Use Node.js image
 FROM node:14
 
-# Crée et définit le répertoire de travail dans le conteneur
-WORKDIR /app
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
-# Copie le fichier package.json et package-lock.json dans le répertoire de travail
-COPY package*.json ./
-
-# Installe les dépendances
+COPY package.json /usr/src/app/
 RUN npm install
+COPY . /usr/src/app
 
-
-
-# Copie tout le contenu du répertoire actuel dans le répertoire de travail du conteneur
-COPY . .
-
-# Installez wait-on globalement
+# Install wait-on globally
 RUN npm install -g wait-on
 
-
-# Expose le port sur lequel l'application Node.js va écouter
+# Expose port
 EXPOSE 3000
 
-# Commande pour démarrer l'application
-CMD ["npm", "start"]
+# Command to start the application after waiting for MySQL
+CMD ["sh", "-c", "wait-on tcp:db:3306 && npm start"]

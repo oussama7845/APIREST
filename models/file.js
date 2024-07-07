@@ -10,11 +10,18 @@ module.exports = function (sequelize, DataTypes) {
       }
   });
 
+
   File.associate = function (models) {
-      File.belongsTo(models.user, {
-          foreignKey: { allowNull: false },
+    console.log('Associating File with models:', Object.keys(models)); // Log models
+    if (models.User) {
+      File.belongsTo(models.User, {
+        foreignKey: { allowNull: false },
       });
+    } else {
+      console.error('User model is not defined');
+    }
   };
+
 
   return File;
 };
