@@ -1,12 +1,10 @@
 {
-
-      "host": "db",
-      "port": 3306,
-      "database": "drive",
-      "username": "root",
-      "password": "oussama$@",
-      "dialect": "mysql",
-      "privateKey": "NotSoPrivateKey"
-
-
+    "host": "db",
+    "port": 3306,
+    "database": "drive",
+    "username": "root",
+    "password": "oussama$@",
+    "dialect": "mysql",
+    "privateKey": "NotSoPrivateKey"
   }
+  

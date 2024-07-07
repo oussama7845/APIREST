@@ -17,9 +17,8 @@ services:
       - db
     networks:
       - mynetwork
-
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      test: ["CMD", "curl", "-f", "http://db:3306/"]
       interval: 10s
       timeout: 5s
       retries: 3

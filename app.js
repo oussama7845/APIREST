@@ -1,13 +1,15 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swaggerConfig'); 
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var fileRouter = require('./routes/file');
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const fileRouter = require('./routes/file');
 
-var app = express();
+const app = express();
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -19,6 +21,7 @@ app.use('/', indexRouter);
 app.use('/', usersRouter);
 app.use('/', fileRouter);
 
+// Utilisation de Swagger UI à l'URL /api-docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 module.exports = app;
-
-
