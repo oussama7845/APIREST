@@ -13,6 +13,8 @@ const path = require("path");
 const env = process.env.NODE_ENV || "development";
 const config = require(path.join(__dirname, "..", "config", "config.json"))[env];
 const uploadModule = require('../modules/uploader.js');
+const User = require('../models').User;
+
 
 /**
  * @swagger
@@ -35,12 +37,20 @@ router.get('/files', function (req, res) {
     });
 });
 
+
+
+
+
+
+
+
 /**
  * @swagger
  * /uploadfiles:
  *   post:
- *     summary: Upload a file
- *     description: Uploads a file and creates a new file entry in the database.
+ *     summary: Upload a file and associate it with the authenticated user.
+ *     tags:
+ *       - Files
  *     requestBody:
  *       required: true
  *       content:
@@ -51,22 +61,54 @@ router.get('/files', function (req, res) {
  *               file:
  *                 type: string
  *                 format: binary
+ *               id:
+ *                 type: integer
+ *                 description: User ID
  *     responses:
  *       '201':
- *         description: Successfully uploaded file and created a new file entry.
+ *         description: File uploaded successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 file:
+ *                   type: string
+ *               example:
+ *                 id: 1
+ *                 file: "example-file.txt"
  *       '500':
- *         description: Internal server error.
+ *         description: Internal Server Error.
  */
 router.post('/uploadfiles', [uploadModule], async (req, res) => {
     try {
+        // Retrieve the user ID from the request body or authenticated user
+        const userId = req.body.id || (req.user && req.user.id);
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        // Ensure the file was uploaded
+        const fileField = req.uploadedFiles.find(file => file.fieldname === "file");
+        if (!fileField) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        // Create the file instance with associated user ID
         const createdFile = await File.create({
-            file: req.uploadedFiles.find(file => file.fieldname === "file").newName,
+            file: fileField.newName,
+            UserId: userId, // Associate the file with the user
         });
+
         return res.status(201).json(createdFile);
     } catch (error) {
-        console.error(error);
+        console.error('Error uploading or creating file:', error);
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
 
 module.exports = router;

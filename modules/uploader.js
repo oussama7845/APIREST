@@ -1,11 +1,11 @@
-const multer = require("multer");
-const { v4: uuidv4 } = require("uuid");
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 
 const TMP_UPLOAD_FOLDER = `${__dirname}/../uploads/tmp`;
 const LIMIT_FILE_SIZE = 10 * 1024 * 1024; // 10Mo
 
-// Crée le dossier de destination s'il n'existe pas
+// Create destination folder if it doesn't exist
 if (!fs.existsSync(TMP_UPLOAD_FOLDER)) {
   fs.mkdirSync(TMP_UPLOAD_FOLDER, { recursive: true });
 }
@@ -38,7 +38,6 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: { fileSize: LIMIT_FILE_SIZE },
-});
+}).fields([{ name: "file", maxCount: 1 }]); 
 
-module.exports = upload.fields({ name: "file", maxCount: 1 });
-
+module.exports = upload;
