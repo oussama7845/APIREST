@@ -1,3 +1,10 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: API endpoints for managing users
+ */
+
 let express = require('express');
 let router = express.Router();
 const fs = require('fs'); 
@@ -20,7 +27,18 @@ schema
   .has().digits()
   .has().not().spaces();
 
-// Get All users
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Retrieve all users
+ *     description: Retrieve a list of all users from the database.
+ *     responses:
+ *       '200':
+ *         description: A successful response with a list of users.
+ *       '500':
+ *         description: Internal server error.
+ */
 router.get('/users', function (req, res) {
   User.findAll().then(users => {
     return res.status(200).json(users); 
@@ -30,72 +48,118 @@ router.get('/users', function (req, res) {
   });
 });
 
-
-
-
-// create a new user
+/**
+ * @swagger
+ * /createUser:
+ *   post:
+ *     summary: Create a new user
+ *     description: Creates a new user with the provided details.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstname:
+ *                 type: string
+ *               lastname:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Successfully created user.
+ *       '400':
+ *         description: Invalid email format or password does not meet requirements.
+ *       '405':
+ *         description: Email already in use.
+ *       '500':
+ *         description: Internal server error.
+ */
 router.post('/createUser', async function (req, res) {
   const { firstname, lastname, email, password } = req.body;
 
-
-    // Vérification du format de l'email avec une expression régulière
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Format d\'email invalide' });
-    }
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
 
   try {
-    // Vérifier si l'email existe déjà dans la base de données
+    // Check if email already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(405).json({ error: 'Email déjà utilisé' });
+      return res.status(405).json({ error: 'Email already in use' });
     }
 
-    // Vérification du mot de passe avec le schéma
+    // Password validation with schema
     if (!schema.validate(password)) {
-      return res.status(400).json({ error: 'Le mot de passe ne respecte pas les critères requis' });
+      return res.status(400).json({ error: 'Password does not meet requirements' });
     }
-
 
     const newUser = await User.create({
       firstname,
       lastname,
       email,
-      password, // Le hashage est géré par le modèle User via les hooks
+      password,
       isAdmin: true,
       securityToken: uuidv4(),
     });
 
-
     res.status(200).json(newUser);
   } catch (error) {
-    console.error('Erreur lors de la création de l\'utilisateur :', error);
-    res.status(500).json({ error: 'Erreur serveur lors de la création de l\'utilisateur' });
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-
-
-// Login authentification
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login
+ *     description: Authenticates user credentials and returns a JWT token.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Successfully authenticated and returned JWT token.
+ *       '400':
+ *         description: User not found or incorrect password.
+ *       '500':
+ *         description: Internal server error.
+ */
 router.post('/login', async function (req, res) {
   try {
     const user = await User.findOne({ where: { email: req.body.email } });
 
     if (!user) {
-      return res.status(404).json('user introuvable');
+      return res.status(400).json('User not found');
     }
 
     bcrypt.compare(req.body.password, user.password, function (err, isMatch) {
       if (err) {
-        return res.status(500).json('Erreur est survenue lors de la vérification du mot de passe');
+        return res.status(500).json('Error verifying password');
       }
       if (!isMatch) {
-        return res.status(403).json('Mot de passe incorrect');
+        return res.status(400).json('Incorrect password');
       }
 
       let token = jwt.sign(
         {
-          exp: Math.floor(Date.now() / 1000) + (60 * 60 * 876000), // expiration en secondes
+          exp: Math.floor(Date.now() / 1000) + (60 * 60 * 876000), // Expiration in seconds
           id: user.id,
           email: user.email,
           firstname: user.firstname,
@@ -104,7 +168,6 @@ router.post('/login', async function (req, res) {
         },
         config.privateKey
       );
-
 
       return res.status(200).json({
         id: user.id,
@@ -116,14 +179,9 @@ router.post('/login', async function (req, res) {
       });
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json("Une erreur est survenue lors de la recherche de l'user");
+    console.error('Error finding user:', error);
+    return res.status(500).json('An error occurred while finding user');
   }
 });
-
-
-
-
-
 
 module.exports = router;
